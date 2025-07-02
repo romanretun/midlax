@@ -7,14 +7,19 @@ import openai
 import nest_asyncio
 import asyncio
 
+# Токены из переменных окружения
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 openai.api_key = OPENAI_API_KEY
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
 )
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Привет! Пришли мне аудиофайл или голосовое сообщение, я его расшифрую.")
 
 async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = None
@@ -28,38 +33,15 @@ async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     with tempfile.NamedTemporaryFile(suffix=".ogg") as tmp_file:
         await file.download_to_drive(tmp_file.name)
+
         await update.message.reply_text("Обрабатываю аудио...")
 
         try:
             with open(tmp_file.name, "rb") as audio_file:
-                transcript = openai.Audio.transcriptions.create(
+                transcript = openai.audio.transcriptions.create(
                     file=audio_file,
                     model="whisper-1"
                 )
-            text = transcript['text']
-            await update.message.reply_text(f"Расшифровка:\n\n{text}")
-        except Exception as e:
-            await update.message.reply_text(f"Ошибка при расшифровке: {e}")
-    await update.message.reply_text("Привет! Пришли мне аудиофайл, я его расшифрую.")
-
-async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    file = None
-    if update.message.voice:
-        file = await update.message.voice.get_file()
-    elif update.message.audio:
-        file = await update.message.audio.get_file()
-    else:
-        await update.message.reply_text("Пожалуйста, отправь аудиофайл или голосовое сообщение.")
-        return
-
-    with tempfile.NamedTemporaryFile(suffix=".ogg") as tmp_file:
-        await file.download_to_drive(tmp_file.name)
-
-        await update.message.reply_text("Обрабатываю аудио...")
-
-        try:
-            with open(tmp_file.name, "rb") as audio_file:
-                transcript = openai.Audio.transcribe("whisper-1", audio_file)
             text = transcript['text']
             await update.message.reply_text(f"Расшифровка:\n\n{text}")
         except Exception as e:
@@ -72,12 +54,8 @@ async def main():
     app.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, handle_audio))
 
     print("Бот запущен")
-    await app.run_polling(close_loop=False)
+    await app.run_polling()
 
 if __name__ == '__main__':
-    import nest_asyncio
     nest_asyncio.apply()
-    import asyncio
     asyncio.run(main())
-
-
