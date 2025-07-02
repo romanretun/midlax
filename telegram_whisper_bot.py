@@ -52,12 +52,7 @@ async def main():
     await app.run_polling(close_loop=False)
 
 if __name__ == '__main__':
-import asyncio
-import nest_asyncio
-
-nest_asyncio.apply()
-asyncio.run(main())
-
-nest_asyncio
+    nest_asyncio.apply()
+    asyncio.run(main())
 
 
