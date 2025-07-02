@@ -4,6 +4,8 @@ import tempfile
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import openai
+import nest_asyncio
+import asyncio
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -50,6 +52,7 @@ async def main():
     await app.run_polling(close_loop=False)
 
 if __name__ == '__main__':
+    nest_asyncio.apply()
+    asyncio.run(main())
     
-    import asyncio
-    asyncio.get_event_loop().run_until_complete(main())
+ 
