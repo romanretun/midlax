@@ -16,7 +16,30 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    file = None
+    if update.message.voice:
+        file = await update.message.voice.get_file()
+    elif update.message.audio:
+        file = await update.message.audio.get_file()
+    else:
+        await update.message.reply_text("Пожалуйста, отправь аудиофайл или голосовое сообщение.")
+        return
+
+    with tempfile.NamedTemporaryFile(suffix=".ogg") as tmp_file:
+        await file.download_to_drive(tmp_file.name)
+        await update.message.reply_text("Обрабатываю аудио...")
+
+        try:
+            with open(tmp_file.name, "rb") as audio_file:
+                transcript = openai.Audio.transcriptions.create(
+                    file=audio_file,
+                    model="whisper-1"
+                )
+            text = transcript['text']
+            await update.message.reply_text(f"Расшифровка:\n\n{text}")
+        except Exception as e:
+            await update.message.reply_text(f"Ошибка при расшифровке: {e}")
     await update.message.reply_text("Привет! Пришли мне аудиофайл, я его расшифрую.")
 
 async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
