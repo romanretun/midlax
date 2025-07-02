@@ -47,7 +47,7 @@ async def main():
     app.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, handle_audio))
 
     print("Бот запущен")
-    await app.run_polling()
+    await app.run_polling(close_loop=False)
 
 if __name__ == '__main__':
     
